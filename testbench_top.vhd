@@ -521,7 +521,7 @@ begin -- architecture
       uart_tx           	  => fpga_out_tx,
 
       -- Key pushbutton inputs
-      key_press                   => key_n,
+      key_n               => key_n,
 
       -- Switch input
       --sw                      => sw,

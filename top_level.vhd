@@ -8,7 +8,7 @@ library work;
 entity top_level is
 generic(	
 
-g_simulation	: boolean := false;
+g_simulation	: boolean := true;
 max_val 			: integer := 100;
 val_bits 		: integer := 8
 );
@@ -26,7 +26,7 @@ port(
 	
 	
 		-- Signals to Key_control
-	key_press 			: in std_logic_vector(3 downto 0):="0000";
+	key_n 			: in std_logic_vector(3 downto 0):="0000";
 	key_off_out 		: buffer std_logic;
 	key_on_out 			: buffer std_logic;
 	key_down_out 		: buffer std_logic;
@@ -35,8 +35,8 @@ port(
 	
 	-- Signals for PWM controller
 	pwm_pulse_top 				: out std_logic;
-	pwm_duty_cycle_top		: buffer std_logic_vector((val_bits-1) downto 0);
-	pwm_duty_update_top		: buffer std_logic;
+	pwm_duty_cycle_top		: buffer std_logic_vector((val_bits-1) downto 0):="00000000";
+	pwm_duty_update_top		: buffer std_logic:='0';
 
 	
 	-- Signals for PLL component
@@ -51,8 +51,8 @@ port(
 	serial_vector		: buffer std_logic_vector(7 downto 0):="00000000";
 	
 	-- signals for Reset controller
-	reset_ctrl_out			: buffer std_logic;
-	reset_ctrl_out_n		: buffer std_logic;
+	reset_ctrl_out			: buffer std_logic:='0';
+	reset_ctrl_out_n		: buffer std_logic:='1';
 
 	-- Signals for Serial UART
 	uart_rx					: in std_logic:='0';
@@ -78,9 +78,7 @@ end entity top_level;
 
 
 architecture top_level_rtl of top_level is
-signal dc_transmit_ready : std_logic;
 begin
-dc_transmit_ready <= uart_transmit_ready;
 	-- generate pll
 
    ledr(9 downto 1)     <= (others => '0');
@@ -132,7 +130,7 @@ dc_transmit_ready <= uart_transmit_ready;
 port map(
 		--Inputs
 	clk => pll_clock_50,
-	key_pressed	=> key_press,
+	key_pressed	=> key_n,
 	
 		-- Outputs
 	key_signal_off => key_off_out,
@@ -199,13 +197,20 @@ port map (
 	clk => pll_clock_50,
 	reset => reset_ctrl_out,
 	reset_n => reset_ctrl_out_n,
-	pwm_pulse => pwm_pulse_top,
 	
+	-- PWM Outputs
+	pwm_pulse => pwm_pulse_top,
+	pwm_duty_cycle => pwm_duty_cycle_top,
+	pwm_duty_update => pwm_duty_update_top,
+	ledg => ledg(0),
+	
+	-- Serial inputs
 	serial_on => serial_on_out,
 	serial_off => serial_off_out,
 	serial_up => serial_up_out,
 	serial_down => serial_down_out,
 	
+	-- Key Inputs
 	key_on => key_on_out,
 	key_off => key_off_out,
 	key_up => key_up_out,
@@ -217,7 +222,7 @@ port map (
 		
 		
 	-- DC Display controller
-i_dc_controll			:entity work.dc_to_7seg
+i_dc_controll			:entity work.dc_disp_ctrl
 generic map(
 	bit_length	=> val_bits
 	)

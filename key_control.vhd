@@ -4,6 +4,9 @@ library ieee;
 	--use IEEE.math_real.all;
 
 entity key_control is
+	generic (
+	max_count 	: integer := 500000
+	);
 	port(
 	--Input
 	clk				: in std_logic:='0';
@@ -21,7 +24,7 @@ end entity;
 architecture key_controller of key_control is
 signal key_pressed_r : std_logic_vector(3 downto 0);
 signal key_pressed_2r : std_logic_vector(3 downto 0);
-signal time_counter : integer range 1 to 500000:=500000;
+signal time_counter : integer range 1 to max_count:=max_count;
 begin
 	double_sync:process(clk)
 	begin
@@ -35,32 +38,33 @@ begin
 	begin
 		if(rising_edge(clk)) then
 		-- count up to 500000 clock pulses = 10ms after each button press
-		if( time_counter = 500000) then
+		-- using 5 pulses for simulation = 100 ns
+		if( time_counter = max_count) then
 			case key_pressed_2r is
-				when "0111" =>
+				when "0111" => -- up
 					time_counter <= 1;
-					key_signal_off <= '1';
-					key_signal_up <= '0';
-					key_signal_down <= '0';
-					key_signal_on <= '0';
-				when "1011" =>
-					time_counter <= 1;
-					key_signal_on <= '1';
-					key_signal_up <= '0';
-					key_signal_down <= '0';
 					key_signal_off <= '0';
-				when "1101" =>
-					time_counter <= 1;
-					key_signal_down <= '1';
-					key_signal_up <= '0';
-					key_signal_on <= '0';
-					key_signal_off <= '0';
-				when "1110" =>
-					time_counter <= 1;
 					key_signal_up <= '1';
 					key_signal_down <= '0';
 					key_signal_on <= '0';
+				when "1011" => -- down
+					time_counter <= 1;
+					key_signal_on <= '0';
+					key_signal_up <= '0';
+					key_signal_down <= '1';
 					key_signal_off <= '0';
+				when "1101" => -- On
+					time_counter <= 1;
+					key_signal_down <= '0';
+					key_signal_up <= '0';
+					key_signal_on <= '1';
+					key_signal_off <= '0';
+				when "1110" => -- Off
+					time_counter <= 1;
+					key_signal_up <= '0';
+					key_signal_down <= '0';
+					key_signal_on <= '0';
+					key_signal_off <= '1';
 				when others =>
 					key_signal_up <= '0';
 					key_signal_down <= '0';

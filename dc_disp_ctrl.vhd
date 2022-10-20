@@ -3,7 +3,7 @@ library ieee;
    use ieee.numeric_std.all;
 	--use IEEE.math_real.all;
 	
-entity dc_to_7seg is
+entity dc_disp_ctrl is
 generic(
 	bit_length	: integer :=8
 
@@ -34,14 +34,15 @@ end entity;
 
 
 
-architecture seg_control of dc_to_7seg is
-signal bcd_0                   : unsigned(3 downto 0); -- ones
-signal bcd_1                   : unsigned(3 downto 0); -- tens
-signal bcd_2                   : unsigned(3 downto 0); -- hundreds
+architecture seg_control of dc_disp_ctrl is
+signal bcd_ones                   : unsigned(3 downto 0); -- ones
+signal bcd_tens                   : unsigned(3 downto 0); -- tens
+signal bcd_hundreds                   : unsigned(3 downto 0); -- hundreds
 signal valid_out					: boolean:=false;
 signal transmit_flag				: boolean := false;
 signal wait_cycle					: boolean := false;
-signal transmission_iteration : integer range 0 to 3:=0;
+signal transmission_iteration : integer range 0 to 4:=0;
+
 function int_to_ascii(int : integer; iteration : integer)
 	return std_logic_vector is
 begin
@@ -100,14 +101,14 @@ begin
 		if(transmit_ready = '1' and transmit_flag and not wait_cycle) then
 			
 			if( transmission_iteration = 0) then
-				transmit_data <= int_to_ascii(to_integer(bcd_2),transmission_iteration);
+				transmit_data <= int_to_ascii(to_integer(bcd_hundreds),transmission_iteration);
 			elsif (transmission_iteration = 1) then
-				transmit_data <= int_to_ascii(to_integer(bcd_1),transmission_iteration);
+				transmit_data <= int_to_ascii(to_integer(bcd_tens),transmission_iteration);
 			elsif transmission_iteration = 2 then
-				transmit_data <= int_to_ascii(to_integer(bcd_0),transmission_iteration);
+				transmit_data <= int_to_ascii(to_integer(bcd_ones),transmission_iteration);
 			elsif transmission_iteration = 3 then
 				transmit_data <= "00100101";
-				elsif transmission_iteration = 4 then
+			elsif transmission_iteration = 4 then
 				transmit_data <= "00001101";
 			end if;
 			transmit_valid <= '1';
@@ -125,92 +126,97 @@ begin
 end process DC_transmitt_process;
 
 
-bcd_to_7seg   : process(valid_out)
+bcd_to_7seg   : process(valid_out,bcd_ones,bcd_tens,bcd_hundreds)
 
 begin
 	if(valid_out) then
-		case bcd_2 is
+		case bcd_hundreds is
 			when "0000" =>
-				hex2 <= "1111111";
+				hex2 <= "1111111"; -- Blank
 			when "0001" =>
-				hex2 <= "1111001";
+				hex2 <= "1111001"; -- 1
 			when others =>
-				hex2 <= "0111111";
+				hex2 <= "0111111"; -- -
+		end case;			
+		case bcd_tens is	
+			when "0000" =>
+				if(bcd_hundreds /= "0001") then
+					hex1 <= "1111111"; -- Blank
+				else
+					hex1 <= "1000000"; -- 0
+				end if;
+				
+			when "0001" =>
+				hex1 <= "1111001"; -- 1
+				
+			when "0010" =>
+				hex1 <= "0100100"; -- 2
+				
+			when "0011" =>
+				hex1 <= "0110000"; -- 3
+				
+			when "0100" =>
+				hex1 <= "0011001"; -- 4
+				
+			when "0101" =>
+				hex1 <= "0010010"; -- 5
+				
+			when "0110" =>
+				hex1 <= "0000010"; -- 6
+			
+			when "0111" => 
+				hex1 <= "1111000"; -- 7
+				
+			when "1000" => 
+				hex1 <= "0000000"; -- 8
+			
+			when "1001" => 
+				hex1 <= "0011000"; -- 9
+				
+			when others =>
+				hex1 <= "0111111"; -- -
 		end case;
-		else			
-			case bcd_1 is	
-				when "0000" =>
-					hex1 <= "1111111"; -- " "
-				when "0001" =>
-					hex1 <= "1111001"; -- 1
-					
-				when "0010" =>
-					hex1 <= "0100100"; -- 2
-					
-				when "0011" =>
-					hex1 <= "0110000"; -- 3
-					
-				when "0100" =>
-					hex1 <= "0011001"; -- 4
-					
-				when "0101" =>
-					hex1 <= "0010010"; -- 5
-					
-				when "0110" =>
-					hex1 <= "0000010"; -- 6
-				
-				when "0111" => 
-					hex1 <= "1111000"; -- 7
-					
-				when "1000" => 
-					hex1 <= "0000000"; -- 8
-				
-				when "1001" => 
-					hex1 <= "0011000"; -- 9
-					
-				when others =>
-					hex1 <= "0111111"; -- -
-			end case;
-		case bcd_2 is
+		case  bcd_ones is
 			when "0000" =>
 				hex0 <= "1000000"; -- 0
+		
+			when "0001" =>
+				hex0 <= "1111001"; -- 1
+				
+			when "0010" =>
+				hex0 <= "0100100"; -- 2
+				
+			when "0011" =>
+				hex0 <= "0110000"; -- 3
+				
+			when "0100" =>
+				hex0 <= "0011001"; -- 4
+				
+			when "0101" =>
+				hex0 <= "0010010"; -- 5
+				
+			when "0110" =>
+				hex0 <= "0000010"; -- 6
 			
-				when "0001" =>
-					hex1 <= "1111001"; -- 1
-					
-				when "0010" =>
-					hex1 <= "0100100"; -- 2
-					
-				when "0011" =>
-					hex1 <= "0110000"; -- 3
-					
-				when "0100" =>
-					hex1 <= "0011001"; -- 4
-					
-				when "0101" =>
-					hex1 <= "0010010"; -- 5
-					
-				when "0110" =>
-					hex1 <= "0000010"; -- 6
+			when "0111" => 
+				hex0 <= "1111000"; -- 7
 				
-				when "0111" => 
-					hex1 <= "1111000"; -- 7
-					
-				when "1000" => 
-					hex1 <= "0000000"; -- 8
+			when "1000" => 
+				hex0 <= "0000000"; -- 8
+			
+			when "1001" => 
+				hex0 <= "0011000"; -- 9
 				
-				when "1001" => 
-					hex1 <= "0011000"; -- 9
-				when others =>
-					hex1 <= "0111111"; -- -
+			when others =>
+				hex0 <= "0111111"; -- -
 		end case;
 	end if;
-		
 end process bcd_to_7seg;
 
-binary_to_BCD : process(duty_cycle_update,reset,reset_n,clk)
+binary_to_BCD : process(duty_cycle_update,reset,reset_n,clk,dc_value)
 	variable BCD 			: unsigned(11 downto 0):="000000000000";
 	variable input			: unsigned(7 downto 0):="00000000";
+	--Constants used to compare and add
 	variable addThree		: unsigned(3 downto 0):="0011";
 	variable compareFour	: unsigned(3 downto 0):="0100";
 	begin
@@ -247,9 +253,9 @@ binary_to_BCD : process(duty_cycle_update,reset,reset_n,clk)
 					end if;
 				end loop;
 				-- enter new digits into BCD digits and set flag for transmission
-				bcd_0(3 downto 0) <= BCD(3 downto 0);
-				bcd_1(3 downto 0) <= BCD(7 downto 4);
-				bcd_2(3 downto 0) <= BCD(11 downto 8);
+				bcd_ones(3 downto 0) <= BCD(3 downto 0);
+				bcd_tens(3 downto 0) <= BCD(7 downto 4);
+				bcd_hundreds(3 downto 0) <= BCD(11 downto 8);
 				valid_out <= true;
 				ready <='1';
 				else 

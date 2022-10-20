@@ -62,6 +62,9 @@ set_global_assignment -name EDA_NATIVELINK_SIMULATION_TEST_BENCH top_testbench -
 set_global_assignment -name EDA_TEST_BENCH_NAME top_testbench -section_id eda_simulation
 set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id top_testbench
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME top_level -section_id top_testbench
+set_global_assignment -name EDA_TEST_BENCH_FILE testbench_pkg.vhd -section_id top_testbench
+set_global_assignment -name EDA_TEST_BENCH_FILE testbench_top.vhd -section_id top_testbench
+set_global_assignment -name VHDL_FILE dc_disp_ctrl.vhd
 set_global_assignment -name VHDL_FILE testbench_pkg.vhd
 set_global_assignment -name VHDL_FILE testbench_top.vhd
 set_global_assignment -name VHDL_FILE serial_uart.vhd
@@ -70,8 +73,5 @@ set_global_assignment -name VHDL_FILE altera_pll_cyclone2.vhd
 set_global_assignment -name VHDL_FILE serial_ctr.vhd
 set_global_assignment -name VHDL_FILE pwm_control.vhd
 set_global_assignment -name VHDL_FILE key_control.vhd
-set_global_assignment -name VHDL_FILE dc_to_7seg.vhd
 set_global_assignment -name VHDL_FILE top_level.vhd
-set_global_assignment -name EDA_TEST_BENCH_FILE testbench_pkg.vhd -section_id top_testbench
-set_global_assignment -name EDA_TEST_BENCH_FILE testbench_top.vhd -section_id top_testbench
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
