@@ -9,7 +9,7 @@ entity top_level is
 generic(	
 
 g_simulation	: boolean := true;
-max_val 			: integer := 100;
+max_val 		: integer := 50000;
 val_bits 		: integer := 8
 );
 
@@ -68,8 +68,11 @@ port(
 	seg_ready				: out std_logic:='0';
 	hex0						: out std_logic_vector(6 downto 0);
 	hex1						: out std_logic_vector(6 downto 0);
-	hex2						: out std_logic_vector(6 downto 0)
+	hex2						: out std_logic_vector(6 downto 0);
 	
+	-- Debug
+
+	debug_counter				: out integer range 0 to 50000:=0
 
 );
 
@@ -200,7 +203,7 @@ port map (
 	
 	-- PWM Outputs
 	pwm_pulse => pwm_pulse_top,
-	pwm_duty_cycle => pwm_duty_cycle_top,
+	pwm_duty_cycle_percent => pwm_duty_cycle_top,
 	pwm_duty_update => pwm_duty_update_top,
 	ledg => ledg(0),
 	
@@ -214,7 +217,10 @@ port map (
 	key_on => key_on_out,
 	key_off => key_off_out,
 	key_up => key_up_out,
-	key_down => key_down_out
+	key_down => key_down_out,
+
+	-- debug
+	debug_counter => debug_counter
 	
 
 );
