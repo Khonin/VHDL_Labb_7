@@ -16,7 +16,7 @@ entity serial_uart is
    generic(
       g_reset_active_state    : std_logic                      := '1';
       g_serial_speed_bps      : natural range 9600 to 115200   := 115200;
-      g_clk_period_ns         : natural range 10 to 100        := 20;      -- 100 MHz standard clock
+      g_clk_period_ns         : natural range 10 to 100        := 20;      -- 20ns for 50MHz clock
       g_parity                : natural range 0 to 2           := 0);      -- 0 = no, 1 = odd, 2 = even
    port(
       clk                     : in  std_logic;

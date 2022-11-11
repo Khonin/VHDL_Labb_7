@@ -31,50 +31,61 @@ architecture arch of serial_ctr is
 	signal serial_down : std_logic;
 	--signal clk			 : std_logic;
 	signal received_data : natural range 0 to 127;
-	signal time_counter : integer range 1 to 500000:=500000;
 begin
-serial_on_output <= serial_on;
-serial_off_output <= serial_off;
-serial_up_output <= serial_up;
-serial_down_output <= serial_down;
-
 control: process(clk)
 begin
 	if rising_edge(clk) then
-		if(time_counter = 500000) then
-			if(data_valid = '1') then
-				received_data <= to_integer(unsigned(data));		
-				case received_data is
-					when 68 => --D
-						time_counter <= 1;
-						serial_down <= '1';
-					when 100 => --d
-						time_counter <= 1;
-						serial_down <= '1';
-					when 85 => --U
-						time_counter <= 1;
-						serial_up <= '1';
-					when 117 => --u
-						time_counter <= 1;
-						serial_up <= '1';
-					when 48 => --0
-						time_counter <= 1;
-						serial_off <= '1';
-					when 49 => --1
-						time_counter <= 1;
-						serial_on <= '1';
-					when others =>
-						serial_down <= '0';
-						serial_up <= '0';
-						serial_off <= '0';
-						serial_on <= '0';
-				end case;
-			end if;
+		if(data_valid = '1') then
+			received_data <= to_integer(unsigned(data));		
+			case received_data is
+				when 68 => --D
+					serial_down <= '1';
+					serial_up <= '0';
+					serial_off <= '0';
+					serial_on <= '0';
+				when 100 => --d
+					serial_down <= '1';
+					serial_up <= '0';
+					serial_off <= '0';
+					serial_on <= '0';
+				when 85 => --U
+					serial_up <= '1';
+					serial_down <= '0';
+					serial_off <= '0';
+					serial_on <= '0';
+				when 117 => --u
+					serial_up <= '1';
+					serial_down <= '0';
+					serial_off <= '0';
+					serial_on <= '0';
+				when 48 => --0
+					serial_off <= '1';
+					serial_down <= '0';
+					serial_up <= '0';
+					serial_on <= '0';
+				when 49 => --1
+					serial_on <= '1';
+					serial_down <= '0';
+					serial_up <= '0';
+					serial_off <= '0';
+				when others =>
+					serial_down <= '0';
+					serial_up <= '0';
+					serial_off <= '0';
+					serial_on <= '0';
+			end case;
 		else
-			time_counter <= time_counter + 1;
-			
+			serial_down <= '0';
+			serial_up <= '0';
+			serial_off <= '0';
+			serial_on <= '0';
 		end if;
+		serial_on_output <= serial_on;
+		serial_off_output <= serial_off;
+		serial_up_output <= serial_up;
+		serial_down_output <= serial_down;
 	end if;
+	
 end process;
 
 end architecture arch;

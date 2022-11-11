@@ -8,7 +8,7 @@ library work;
 entity top_level is
 generic(	
 
-g_simulation	: boolean := true;
+g_simulation	: boolean :=true;
 max_val 		: integer := 50000;
 val_bits 		: integer := 8
 );
@@ -48,7 +48,6 @@ port(
 	serial_off_out  	: buffer std_logic;
 	serial_up_out	 	: buffer std_logic;
 	serial_down_out 	: buffer std_logic;
-	serial_vector		: buffer std_logic_vector(7 downto 0):="00000000";
 	
 	-- signals for Reset controller
 	reset_ctrl_out			: buffer std_logic:='0';
@@ -57,8 +56,8 @@ port(
 	-- Signals for Serial UART
 	uart_rx					: in std_logic:='0';
 	uart_tx					: out std_logic;
-	uart_received_data	: out std_logic_vector(7 downto 0);
-	uart_received_valid	: out std_logic;
+	uart_received_data	: buffer std_logic_vector(7 downto 0);
+	uart_received_valid	: buffer std_logic;
 	uart_transmit_data	: buffer std_logic_vector(7 downto 0):="00000000";
 	uart_transmit_valid	: buffer std_logic;
 	uart_transmit_ready 	: buffer std_logic;
@@ -68,12 +67,9 @@ port(
 	seg_ready				: out std_logic:='0';
 	hex0						: out std_logic_vector(6 downto 0);
 	hex1						: out std_logic_vector(6 downto 0);
-	hex2						: out std_logic_vector(6 downto 0);
+	hex2						: out std_logic_vector(6 downto 0)
+
 	
-	-- Debug
-
-	debug_counter				: out integer range 0 to 50000:=0
-
 );
 
 
@@ -154,7 +150,8 @@ port map(
 	serial_up_output	 	=> serial_up_out,
 	serial_down_output	=> serial_down_out,
 	clk					 	=> pll_clock_50,
-	data 						=> serial_vector
+	data 						=> uart_received_data,
+	data_valid 				=> uart_received_valid
 );
 		--
 		
@@ -163,13 +160,13 @@ port map(
 i_uart_controller  	: entity work.serial_uart
 generic map (
 	g_reset_active_state => '1',
-	g_serial_speed_bps	=> 9600,
+	g_serial_speed_bps	=> 115200,
 	g_clk_period_ns		=> 20,
 	g_parity					=> 0
 )
 
 port map(
-	clk 		=> pll_clock_50,
+	clk 		=> clk_50,
 	reset 	=> reset_ctrl_out,
 	rx 		=> uart_rx,
 	tx 		=> uart_tx,
@@ -217,10 +214,7 @@ port map (
 	key_on => key_on_out,
 	key_off => key_off_out,
 	key_up => key_up_out,
-	key_down => key_down_out,
-
-	-- debug
-	debug_counter => debug_counter
+	key_down => key_down_out
 	
 
 );

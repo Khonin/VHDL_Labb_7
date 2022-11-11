@@ -18,9 +18,10 @@ port (
 	reset_n			: in std_logic:='1'; -- Active low reset
 	dc_value			: in std_logic_vector((bit_length-1) downto 0);
 	transmit_ready : in std_logic:='1';
-	transmit_data  : buffer std_logic_vector(7 downto 0):="00000000";
+	
 	
 	-- outputs
+	transmit_data  		: out std_logic_vector(7 downto 0):="00000000";
 	transmit_valid			: out std_logic;
 	ready 					: out std_logic;
 	hex0						: out std_logic_vector(6 downto 0);	
@@ -37,11 +38,11 @@ end entity;
 architecture seg_control of dc_disp_ctrl is
 signal bcd_ones                   : unsigned(3 downto 0); -- ones
 signal bcd_tens                   : unsigned(3 downto 0); -- tens
-signal bcd_hundreds                   : unsigned(3 downto 0); -- hundreds
+signal bcd_hundreds               : unsigned(3 downto 0); -- hundreds
 signal valid_out					: boolean:=false;
-signal transmit_flag				: boolean := false;
-signal wait_cycle					: boolean := false;
-signal transmission_iteration : integer range 0 to 4:=0;
+signal transmission_flag		: boolean:=false;
+signal transmission_buffer		: boolean:=false;
+signal transmission_iteration : integer range 0 to 5:=0;
 
 function int_to_ascii(int : integer; iteration : integer)
 	return std_logic_vector is
@@ -80,25 +81,25 @@ end if;
 end function int_to_ascii;
 
 
+begin 
 
-begin
-
-
-
-DC_transmitt_process : process (clk,valid_out)
+DC_transmitt_process : process (clk,valid_out,transmit_ready)
 
 
 begin
 	
 	if(rising_edge(clk)) then
-	transmit_valid <= '0';
-		if(transmit_flag and transmission_iteration = 4 and not wait_cycle) then
-			transmit_flag <= false;
-		elsif(valid_out and not transmit_flag) then
-			transmit_flag <= true;
-			transmission_iteration <= 0;
+		transmit_valid <= '0';	
+		if(transmission_buffer AND transmission_flag = false) then
+			transmission_flag <= true;
+			transmission_buffer <= false;
+		elsif(duty_cycle_update ='1' AND transmission_flag = false) then
+			transmission_flag <= true;
+		elsif (duty_cycle_update ='1' AND transmission_flag) then
+			transmission_buffer <= true;
+			
 		end if;
-		if(transmit_ready = '1' and transmit_flag and not wait_cycle) then
+		if(transmit_ready = '1' and transmission_flag) then
 			
 			if( transmission_iteration = 0) then
 				transmit_data <= int_to_ascii(to_integer(bcd_hundreds),transmission_iteration);
@@ -111,16 +112,17 @@ begin
 			elsif transmission_iteration = 4 then
 				transmit_data <= "00001101";
 			end if;
-			transmit_valid <= '1';
-			wait_cycle <= true;
-		end if;
-		if (wait_cycle) then
-			if(transmission_iteration < 4) then
-				transmission_iteration <= transmission_iteration + 1;
-			end if;
-			wait_cycle <= false;
 		
-		end if;	
+			if(transmission_iteration < 5) then
+				transmit_valid <= '1';
+				transmission_iteration <= transmission_iteration + 1;
+			else
+				transmit_valid <= '0';
+				transmit_data <= "00000000";
+				transmission_iteration <= 0;
+				transmission_flag <= false;
+			end if;
+		end if;
 	
 	end if;
 end process DC_transmitt_process;
