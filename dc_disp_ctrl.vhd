@@ -16,8 +16,9 @@ port (
 	clk				: in std_logic:='0';
 	reset				: in std_logic:='0'; -- Active high reset
 	reset_n			: in std_logic:='1'; -- Active low reset
-	dc_value			: in std_logic_vector((bit_length-1) downto 0);
+	dc_value			: in std_logic_vector((bit_length-1) downto 0):="00000000";
 	transmit_ready : in std_logic:='1';
+	transmit_data  : out std_logic_vector(7 downto 0):="00000000";
 	
 	
 	-- outputs

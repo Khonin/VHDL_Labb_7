@@ -39,46 +39,29 @@ begin
 			received_data <= to_integer(unsigned(data));		
 			case received_data is
 				when 68 => --D
+					time_counter <= 1;
 					serial_down <= '1';
-					serial_up <= '0';
-					serial_off <= '0';
-					serial_on <= '0';
 				when 100 => --d
+					time_counter <= 1;
 					serial_down <= '1';
-					serial_up <= '0';
-					serial_off <= '0';
-					serial_on <= '0';
 				when 85 => --U
+					time_counter <= 1;
 					serial_up <= '1';
-					serial_down <= '0';
-					serial_off <= '0';
-					serial_on <= '0';
 				when 117 => --u
+					time_counter <= 1;
 					serial_up <= '1';
-					serial_down <= '0';
-					serial_off <= '0';
-					serial_on <= '0';
 				when 48 => --0
+					time_counter <= 1;
 					serial_off <= '1';
-					serial_down <= '0';
-					serial_up <= '0';
-					serial_on <= '0';
 				when 49 => --1
+					time_counter <= 1;
 					serial_on <= '1';
-					serial_down <= '0';
-					serial_up <= '0';
-					serial_off <= '0';
 				when others =>
 					serial_down <= '0';
 					serial_up <= '0';
 					serial_off <= '0';
 					serial_on <= '0';
 			end case;
-		else
-			serial_down <= '0';
-			serial_up <= '0';
-			serial_off <= '0';
-			serial_on <= '0';
 		end if;
 		serial_on_output <= serial_on;
 		serial_off_output <= serial_off;

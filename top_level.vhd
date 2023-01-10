@@ -18,7 +18,6 @@ port(
 	-- Inputs 
 	clk_50					: in std_logic:='0'; -- 50MHz connected to PLL
 	reset_n					: in std_logic:='1'; -- Active low reset
-	reset						: buffer std_logic:='0'; -- Active high reset
 	
 	-- Outputs 
 	ledr						: out std_logic_vector(9 downto 0);
@@ -27,16 +26,11 @@ port(
 	
 		-- Signals to Key_control
 	key_n 			: in std_logic_vector(3 downto 0):="0000";
-	key_off_out 		: buffer std_logic;
-	key_on_out 			: buffer std_logic;
-	key_down_out 		: buffer std_logic;
-	key_up_out 			: buffer std_logic;
+
 	
 	
 	-- Signals for PWM controller
 	pwm_pulse_top 				: out std_logic;
-	pwm_duty_cycle_top		: buffer std_logic_vector((val_bits-1) downto 0):="00000000";
-	pwm_duty_update_top		: buffer std_logic:='0';
 
 	
 	-- Signals for PLL component
@@ -53,6 +47,7 @@ port(
 	reset_ctrl_out			: buffer std_logic:='0';
 	reset_ctrl_out_n		: buffer std_logic:='1';
 
+
 	-- Signals for Serial UART
 	uart_rx					: in std_logic:='0';
 	uart_tx					: out std_logic;
@@ -61,6 +56,7 @@ port(
 	uart_transmit_data	: buffer std_logic_vector(7 downto 0):="00000000";
 	uart_transmit_valid	: buffer std_logic;
 	uart_transmit_ready 	: buffer std_logic;
+	
 	
 	
 		-- Signals to 7seg Display
@@ -77,6 +73,33 @@ end entity top_level;
 
 
 architecture top_level_rtl of top_level is
+	signal key_off_out 			:  std_logic;
+	signal key_on_out 			:  std_logic;
+	signal key_down_out 			:  std_logic;
+	signal key_up_out 			:  std_logic;
+	signal uart_transmit_data	:  std_logic_vector(7 downto 0):="00000000";
+	signal uart_transmit_valid	:  std_logic;
+   signal uart_transmit_ready :  std_logic;
+	signal reset					: std_logic:='0'; -- Active high reset
+	
+			-- Singals for serial Controller
+	signal serial_on_out   	: std_logic;
+	signal serial_off_out  	:  std_logic;
+	signal serial_up_out	 	:  std_logic;
+	signal serial_down_out 	:  std_logic;
+	signal serial_vector		:  std_logic_vector(7 downto 0):="00000000";
+	
+		-- signals for Reset controller
+	signal reset_ctrl_out			:  std_logic:='0';
+	signal reset_ctrl_out_n		:  std_logic:='1';
+	
+		-- Signals for PLL component
+	signal pll_clock_50	:  STD_LOGIC;
+	signal pll_locked		:  STD_LOGIC; 
+	
+	signal pwm_duty_cycle_top		: std_logic_vector((val_bits-1) downto 0):="00000000";
+	signal pwm_duty_update_top		: std_logic:='0';
+	
 begin
 	-- generate pll
 

@@ -49,31 +49,34 @@ begin
 
 input_handler : process(clk,reset,reset_n) 
 begin
-		-- Async Reset
+	-- Async Reset
 	if (reset = '1' or reset_n ='0' ) then
 		previous_duty_cycle_percent 		<=  100;
 		duty_cycle_percent 					<= 0;
+		pwm_duty_update 						<= '1';
 
-	elsif(rising_edge(clk)) then
-		-- Reset PWM update
-		pwm_duty_update 				<= '0';
+	
+	elsif (rising_edge(clk)) then
 		-- Key On
 		if(key_on = '1') then
 			pwm_duty_update 				<= '1';
-			if(duty_cycle_percent < 10 AND previous_duty_cycle_percent < 10) then -- duty cycle minimum value is 10%
-				previous_duty_cycle_percent <= duty_cycle_percent;
-				duty_cycle_percent 			<= 10;
-			elsif(duty_cycle_percent < 10) then -- Ignore if already on
-				duty_cycle_percent 			<= previous_duty_cycle_percent;
+			if(duty_cycle_percent > 10) then -- If already on ignore key press
+				duty_cycle_percent <= duty_cycle_percent;
+			elsif(previous_duty_cycle_percent > 10) then
+				duty_cycle_percent 				<= previous_duty_cycle_percent;
+				previous_duty_cycle_percent 	<= duty_cycle_percent;
+			else
+				duty_cycle_percent <= 10;
+				previous_duty_cycle_percent <= 0;
 			end if;
-			
-		-- Key Off
+		
+			-- Key Off
 		elsif(key_off = '1') then
 			pwm_duty_update 				<= '1';
 			previous_duty_cycle_percent 	<= duty_cycle_percent;
 			duty_cycle_percent 				<= 0;
 			
-		-- Key Up	
+			-- Key Up	
 		elsif(key_up ='1') then
 			pwm_duty_update 				<= '1';
 			if(duty_cycle_percent < 10) then -- Minimum 10%
@@ -84,31 +87,45 @@ begin
 				duty_cycle_percent 			<= duty_cycle_percent + 1; -- Increase by 1%
 			end if;
 		
-		-- Key Down
+			-- Key Down
 		elsif(key_down ='1') then
 			pwm_duty_update 				<= '1';
 			if(duty_cycle_percent > 10) then -- Minimum 10% | if 0 disregard input
 				previous_duty_cycle_percent <= duty_cycle_percent;
 				duty_cycle_percent 			<= duty_cycle_percent -1; -- Decrease by 1%
 			end if;
-		
-		-- Serial On
-		elsif(serial_on = '1') then
+			
+			-- Serial On
+		elsif(serial_on = '1') then 
 			pwm_duty_update 				<= '1';
-			if(duty_cycle_percent < 10 AND previous_duty_cycle_percent < 10) then -- duty cycle minimum value is 10%
+			if(previous_duty_cycle_percent > 10) then -- duty cycle minimum value is 10%
+				duty_cycle_percent 			<= previous_duty_cycle_percent;
+				
+			else
 				previous_duty_cycle_percent <= duty_cycle_percent;
 				duty_cycle_percent 			<= 10;
-			elsif(duty_cycle_percent < 10) then -- Ignore if already on
+				
+			end if;
+				
+			-- Serial On
+		elsif(serial_on = '1') then 
+			pwm_duty_update 				<= '1';
+			if(previous_duty_cycle_percent > 10) then -- duty cycle minimum value is 10%
 				duty_cycle_percent 			<= previous_duty_cycle_percent;
+				
+			else
+				previous_duty_cycle_percent <= duty_cycle_percent;
+				duty_cycle_percent 			<= 10;
+				
 			end if;
 			
-		-- Serial Off
+			-- Serial Off
 		elsif(serial_off = '1') then
 			pwm_duty_update 				<= '1';
 			previous_duty_cycle_percent 	<= duty_cycle_percent;
 			duty_cycle_percent 				<= 0;
-			
-		-- Serial Up	
+				
+			-- Serial Up	
 		elsif(serial_up ='1') then
 			pwm_duty_update 				<= '1';
 			if(duty_cycle_percent < 10) then -- Minimum 10%
@@ -118,17 +135,20 @@ begin
 				previous_duty_cycle_percent <= duty_cycle_percent;
 				duty_cycle_percent 			<= duty_cycle_percent + 1; -- Increase by 1%
 			end if;
-		
-		-- Serial Down
+			
+			-- Signal Down
 		elsif(serial_down ='1') then
 			pwm_duty_update 				<= '1';
 			if(duty_cycle_percent > 10) then -- Minimum 10% | if 0 disregard input
 				previous_duty_cycle_percent <= duty_cycle_percent;
 				duty_cycle_percent 			<= duty_cycle_percent -1; -- Decrease by 1%
-			end if;
+			end if;		
+			-- No button Pressed
+		else
+			pwm_duty_update 				<= '0';
 		end if;
 
-		-- Update PWM duty cycle
+			-- Update PWM duty cycle
 		pwm_duty_cycle_percent 		<= std_logic_vector(to_unsigned(duty_cycle_percent,val_bits));
 	end if;
 
@@ -155,7 +175,7 @@ begin
 end process counter_process;
 
 
-pwm_control : process(counter,clk,reset,reset_n)
+pwm_control : process(clk,duty_cycle_percent,reset,reset_n)
 begin	
 	-- PWM Output
 	-- While counter <= pwm_duty_cycle pwm outputs HIGH 
