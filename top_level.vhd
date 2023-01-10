@@ -32,30 +32,11 @@ port(
 	-- Signals for PWM controller
 	pwm_pulse_top 				: out std_logic;
 
-	
-	-- Signals for PLL component
-	pll_clock_50	: buffer STD_LOGIC;
-	pll_locked		: buffer STD_LOGIC; 
-	
-		-- Singals to serial Controller
-	serial_on_out   	: buffer std_logic;
-	serial_off_out  	: buffer std_logic;
-	serial_up_out	 	: buffer std_logic;
-	serial_down_out 	: buffer std_logic;
-	
-	-- signals for Reset controller
-	reset_ctrl_out			: buffer std_logic:='0';
-	reset_ctrl_out_n		: buffer std_logic:='1';
 
 
 	-- Signals for Serial UART
 	uart_rx					: in std_logic:='0';
 	uart_tx					: out std_logic;
-	uart_received_data	: buffer std_logic_vector(7 downto 0);
-	uart_received_valid	: buffer std_logic;
-	uart_transmit_data	: buffer std_logic_vector(7 downto 0):="00000000";
-	uart_transmit_valid	: buffer std_logic;
-	uart_transmit_ready 	: buffer std_logic;
 	
 	
 	
@@ -77,6 +58,8 @@ architecture top_level_rtl of top_level is
 	signal key_on_out 			:  std_logic;
 	signal key_down_out 			:  std_logic;
 	signal key_up_out 			:  std_logic;
+	signal uart_received_data	:  std_logic_vector(7 downto 0);
+	signal uart_received_valid	:  std_logic;
 	signal uart_transmit_data	:  std_logic_vector(7 downto 0):="00000000";
 	signal uart_transmit_valid	:  std_logic;
    signal uart_transmit_ready :  std_logic;
@@ -87,7 +70,6 @@ architecture top_level_rtl of top_level is
 	signal serial_off_out  	:  std_logic;
 	signal serial_up_out	 	:  std_logic;
 	signal serial_down_out 	:  std_logic;
-	signal serial_vector		:  std_logic_vector(7 downto 0):="00000000";
 	
 		-- signals for Reset controller
 	signal reset_ctrl_out			:  std_logic:='0';

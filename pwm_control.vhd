@@ -42,9 +42,10 @@ end entity pwm_control;
 
 
 architecture pwm of pwm_control is
-signal previous_duty_cycle_percent 	: integer range 0 to 100:=100;
+signal previous_duty_cycle_percent 	: integer range 0 to 100:=0;
 signal counter 						: integer range 0 to max_val:=0;
 signal duty_cycle_percent			: integer range 0 to 100:=0;
+signal duty_changed					: boolean := true;
 begin
 
 input_handler : process(clk,reset,reset_n) 
@@ -57,104 +58,96 @@ begin
 
 	
 	elsif (rising_edge(clk)) then
+	pwm_duty_update 				<= '0';
 		-- Key On
 		if(key_on = '1') then
-			pwm_duty_update 				<= '1';
+			
 			if(duty_cycle_percent > 10) then -- If already on ignore key press
 				duty_cycle_percent <= duty_cycle_percent;
-			elsif(previous_duty_cycle_percent > 10) then
-				duty_cycle_percent 				<= previous_duty_cycle_percent;
-				previous_duty_cycle_percent 	<= duty_cycle_percent;
 			else
-				duty_cycle_percent <= 10;
-				previous_duty_cycle_percent <= 0;
+				duty_cycle_percent 				<= previous_duty_cycle_percent;
+				duty_changed <= true;
 			end if;
 		
 			-- Key Off
 		elsif(key_off = '1') then
-			pwm_duty_update 				<= '1';
-			previous_duty_cycle_percent 	<= duty_cycle_percent;
+			
+			if(duty_cycle_percent /= 0) then
+				previous_duty_cycle_percent 	<= duty_cycle_percent;
+				duty_changed <= true;
+			end if;
 			duty_cycle_percent 				<= 0;
 			
 			-- Key Up	
 		elsif(key_up ='1') then
-			pwm_duty_update 				<= '1';
+			
 			if(duty_cycle_percent < 10) then -- Minimum 10%
-				previous_duty_cycle_percent <= duty_cycle_percent;
 				duty_cycle_percent 			<= 10;
+				duty_changed <= true;
 			elsif(duty_cycle_percent < 100) then -- Maximum 100%
-				previous_duty_cycle_percent <= duty_cycle_percent;
 				duty_cycle_percent 			<= duty_cycle_percent + 1; -- Increase by 1%
+				duty_changed <= true;
 			end if;
 		
 			-- Key Down
 		elsif(key_down ='1') then
-			pwm_duty_update 				<= '1';
+			
 			if(duty_cycle_percent > 10) then -- Minimum 10% | if 0 disregard input
-				previous_duty_cycle_percent <= duty_cycle_percent;
 				duty_cycle_percent 			<= duty_cycle_percent -1; -- Decrease by 1%
+				duty_changed <= true;
 			end if;
 			
 			-- Serial On
 		elsif(serial_on = '1') then 
-			pwm_duty_update 				<= '1';
-			if(previous_duty_cycle_percent > 10) then -- duty cycle minimum value is 10%
-				duty_cycle_percent 			<= previous_duty_cycle_percent;
-				
+			
+			if(duty_cycle_percent > 10) then -- If already on ignore key press
+				duty_cycle_percent <= duty_cycle_percent;
 			else
-				previous_duty_cycle_percent <= duty_cycle_percent;
-				duty_cycle_percent 			<= 10;
-				
+				duty_cycle_percent 				<= previous_duty_cycle_percent;
+				duty_changed <= true;
 			end if;
 				
-			-- Serial On
-		elsif(serial_on = '1') then 
-			pwm_duty_update 				<= '1';
-			if(previous_duty_cycle_percent > 10) then -- duty cycle minimum value is 10%
-				duty_cycle_percent 			<= previous_duty_cycle_percent;
-				
-			else
-				previous_duty_cycle_percent <= duty_cycle_percent;
-				duty_cycle_percent 			<= 10;
-				
-			end if;
 			
 			-- Serial Off
 		elsif(serial_off = '1') then
-			pwm_duty_update 				<= '1';
-			previous_duty_cycle_percent 	<= duty_cycle_percent;
+			
+			if(duty_cycle_percent /= 0) then
+				previous_duty_cycle_percent 	<= duty_cycle_percent;
+				duty_changed <= true;
+			end if;
 			duty_cycle_percent 				<= 0;
 				
 			-- Serial Up	
 		elsif(serial_up ='1') then
-			pwm_duty_update 				<= '1';
+			
 			if(duty_cycle_percent < 10) then -- Minimum 10%
-				previous_duty_cycle_percent <= duty_cycle_percent;
 				duty_cycle_percent 			<= 10;
+				duty_changed <= true;
 			elsif(duty_cycle_percent < 100) then -- Maximum 100%
-				previous_duty_cycle_percent <= duty_cycle_percent;
 				duty_cycle_percent 			<= duty_cycle_percent + 1; -- Increase by 1%
+				duty_changed <= true;
 			end if;
 			
 			-- Signal Down
 		elsif(serial_down ='1') then
-			pwm_duty_update 				<= '1';
+			
 			if(duty_cycle_percent > 10) then -- Minimum 10% | if 0 disregard input
-				previous_duty_cycle_percent <= duty_cycle_percent;
 				duty_cycle_percent 			<= duty_cycle_percent -1; -- Decrease by 1%
-			end if;		
-			-- No button Pressed
-		else
-			pwm_duty_update 				<= '0';
+				duty_changed <= true;
+			end if;			
 		end if;
-
-			-- Update PWM duty cycle
-		pwm_duty_cycle_percent 		<= std_logic_vector(to_unsigned(duty_cycle_percent,val_bits));
+		
+		-- Update PWM duty cycle
+		if(duty_changed) then
+			pwm_duty_cycle_percent 		<= std_logic_vector(to_unsigned(duty_cycle_percent,val_bits));
+			pwm_duty_update 				<= '1';
+		end if;
 	end if;
 
 end process input_handler;
 
-
+pwm_pulse <= '1' when counter < duty_cycle_percent*one_perc_val else '0';
+ledg <= '1' when counter < duty_cycle_percent*one_perc_val else '0';
 
 counter_process : process(clk,reset,reset_n)
 begin
@@ -174,24 +167,6 @@ begin
 	end if;
 end process counter_process;
 
-
-pwm_control : process(clk,duty_cycle_percent,reset,reset_n)
-begin	
-	-- PWM Output
-	-- While counter <= pwm_duty_cycle pwm outputs HIGH 
-	if(rising_edge(clk)) then
-
-		if(counter < (duty_cycle_percent*one_perc_val)) then
-			pwm_pulse 	<= '1';
-			ledg 		<= '1';
-		else
-			pwm_pulse 	<= '0';
-			ledg 		<= '0';
-		end if;
-	end if;
-
-
-end process pwm_control;
 
 
 end architecture pwm;

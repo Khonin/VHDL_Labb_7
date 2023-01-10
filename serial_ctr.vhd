@@ -35,32 +35,27 @@ begin
 control: process(clk)
 begin
 	if rising_edge(clk) then
+		serial_down <= '0';
+		serial_up <= '0';
+		serial_off <= '0';
+		serial_on <= '0';
 		if(data_valid = '1') then
-			received_data <= to_integer(unsigned(data));		
+			received_data <= to_integer(unsigned(data));	
 			case received_data is
 				when 68 => --D
-					time_counter <= 1;
 					serial_down <= '1';
 				when 100 => --d
-					time_counter <= 1;
 					serial_down <= '1';
 				when 85 => --U
-					time_counter <= 1;
 					serial_up <= '1';
 				when 117 => --u
-					time_counter <= 1;
 					serial_up <= '1';
 				when 48 => --0
-					time_counter <= 1;
 					serial_off <= '1';
 				when 49 => --1
-					time_counter <= 1;
-					serial_on <= '1';
+					serial_on <= '1';		
 				when others =>
-					serial_down <= '0';
-					serial_up <= '0';
-					serial_off <= '0';
-					serial_on <= '0';
+				
 			end case;
 		end if;
 		serial_on_output <= serial_on;
