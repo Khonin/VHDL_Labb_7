@@ -149,20 +149,21 @@ end process input_handler;
 pwm_pulse <= '1' when counter < duty_cycle_percent*one_perc_val else '0';
 ledg <= '1' when counter < duty_cycle_percent*one_perc_val else '0';
 
-counter_process : process(clk,reset,reset_n)
+counter_process : process(clk,duty_changed,reset,reset_n)
 begin
 
 	-- Async Reset
 	if(reset = '1' or reset_n ='0') then
 		counter 	<= 0;
-	
+	elsif (duty_changed = true) then
+		counter <= 0;
 	-- Counter
 	-- Counts to max_val and then restarts.
 	elsif(rising_edge(clk)) then
 		if(counter < (max_val-1)) then
 			counter <= counter + 1; 
 		else
-			counter <= 1;
+			counter <= 0;
 		end if;
 	end if;
 end process counter_process;
