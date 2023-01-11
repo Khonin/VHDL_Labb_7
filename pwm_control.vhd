@@ -20,16 +20,16 @@ port(
 	reset						: in std_logic:='0'; -- Active high reset
 	
 	-- Serial inpuyts
-	serial_on				: in std_logic;
-	serial_off				: in std_logic;
-	serial_up				: in std_logic;
-	serial_down				: in std_logic;
+	serial_on				: in std_logic:='0';
+	serial_off				: in std_logic:='0';
+	serial_up				: in std_logic:='0';
+	serial_down				: in std_logic:='0';
 	
 	-- Key Inputs
-	key_on					: in std_logic;
-	key_off					: in std_logic;
-	key_up					: in std_logic;
-	key_down				: in std_logic;
+	key_on					: in std_logic:='0';
+	key_off					: in std_logic:='0';
+	key_up					: in std_logic:='0';
+	key_down				: in std_logic:='0';
 	
 	-- Outputs
 	pwm_pulse				: out std_logic; 
@@ -45,7 +45,7 @@ architecture pwm of pwm_control is
 signal previous_duty_cycle_percent 	: integer range 0 to 100:=0;
 signal counter 						: integer range 0 to max_val:=0;
 signal duty_cycle_percent			: integer range 0 to 100:=0;
-signal duty_changed					: boolean := true;
+signal duty_changed					: boolean := false;
 begin
 
 input_handler : process(clk,reset,reset_n) 
@@ -54,29 +54,29 @@ begin
 	if (reset = '1' or reset_n ='0' ) then
 		previous_duty_cycle_percent 		<=  100;
 		duty_cycle_percent 					<= 0;
-		pwm_duty_update 						<= '1';
+		duty_changed <= true;
 
 	
 	elsif (rising_edge(clk)) then
 	pwm_duty_update 				<= '0';
+	duty_changed <= false;
 		-- Key On
 		if(key_on = '1') then
 			
-			if(duty_cycle_percent > 10) then -- If already on ignore key press
-				duty_cycle_percent <= duty_cycle_percent;
-			else
+			if(duty_cycle_percent < 10) then -- If already on ignore key press
 				duty_cycle_percent 				<= previous_duty_cycle_percent;
 				duty_changed <= true;
 			end if;
 		
 			-- Key Off
 		elsif(key_off = '1') then
-			
+				
 			if(duty_cycle_percent /= 0) then
 				previous_duty_cycle_percent 	<= duty_cycle_percent;
 				duty_changed <= true;
 			end if;
 			duty_cycle_percent 				<= 0;
+			
 			
 			-- Key Up	
 		elsif(key_up ='1') then
@@ -157,12 +157,12 @@ begin
 		counter 	<= 0;
 	
 	-- Counter
-	-- Counts to max_val - 1 and then restarts.
+	-- Counts to max_val and then restarts.
 	elsif(rising_edge(clk)) then
 		if(counter < (max_val-1)) then
 			counter <= counter + 1; 
 		else
-			counter <= 0;
+			counter <= 1;
 		end if;
 	end if;
 end process counter_process;

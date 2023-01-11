@@ -16,8 +16,8 @@ port(
 		serial_off_output  : out std_logic;
 		serial_up_output	 : out std_logic;
 		serial_down_output : out std_logic;
-		clk					 : in std_logic;
-		data					 : in std_logic_vector(7 downto 0);
+		clk					 : in std_logic:='0';
+		data					 : in std_logic_vector(7 downto 0):="00000000";
 		data_valid			 : in std_logic:='0'
 		);
 
@@ -25,10 +25,10 @@ end entity serial_ctr;
 
 architecture arch of serial_ctr is
 	
-	signal serial_on   : std_logic;
-	signal serial_off  : std_logic;
-	signal serial_up	 : std_logic;
-	signal serial_down : std_logic;
+	signal serial_on   : std_logic:='0';
+	signal serial_off  : std_logic:='0';
+	signal serial_up	 : std_logic:='0';
+	signal serial_down : std_logic:='0';
 	--signal clk			 : std_logic;
 	signal received_data : natural range 0 to 127;
 begin
@@ -39,8 +39,8 @@ begin
 		serial_up <= '0';
 		serial_off <= '0';
 		serial_on <= '0';
-		if(data_valid = '1') then
-			received_data <= to_integer(unsigned(data));	
+		received_data <= to_integer(unsigned(data));
+		if(data_valid = '1') then	
 			case received_data is
 				when 68 => --D
 					serial_down <= '1';
@@ -55,7 +55,6 @@ begin
 				when 49 => --1
 					serial_on <= '1';		
 				when others =>
-				
 			end case;
 		end if;
 		serial_on_output <= serial_on;

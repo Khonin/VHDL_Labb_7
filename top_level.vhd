@@ -17,7 +17,7 @@ val_bits 		: integer := 8
 port(
 	-- Inputs 
 	clk_50					: in std_logic:='0'; -- 50MHz connected to PLL
-	reset_n					: in std_logic:='1'; -- Active low reset
+
 	
 	-- Outputs 
 	ledr						: out std_logic_vector(9 downto 0);
@@ -58,12 +58,12 @@ architecture top_level_rtl of top_level is
 	signal key_on_out 			:  std_logic;
 	signal key_down_out 			:  std_logic;
 	signal key_up_out 			:  std_logic;
-	signal uart_received_data	:  std_logic_vector(7 downto 0);
+	signal uart_received_data	:  std_logic_vector(7 downto 0):="00000000";
 	signal uart_received_valid	:  std_logic;
 	signal uart_transmit_data	:  std_logic_vector(7 downto 0):="00000000";
 	signal uart_transmit_valid	:  std_logic;
    signal uart_transmit_ready :  std_logic;
-	signal reset					: std_logic:='0'; -- Active high reset
+
 	
 			-- Singals for serial Controller
 	signal serial_on_out   	: std_logic;
@@ -71,9 +71,10 @@ architecture top_level_rtl of top_level is
 	signal serial_up_out	 	:  std_logic;
 	signal serial_down_out 	:  std_logic;
 	
-		-- signals for Reset controller
-	signal reset_ctrl_out			:  std_logic:='0';
-	signal reset_ctrl_out_n		:  std_logic:='1';
+	-- Reset controll signal
+	signal reset						:  std_logic:='0'; -- Active high reset
+	signal reset_n 					:  std_logic:='1'; -- Active Low reset
+	
 	
 		-- Signals for PLL component
 	signal pll_clock_50	:  STD_LOGIC;
@@ -172,7 +173,7 @@ generic map (
 
 port map(
 	clk 		=> clk_50,
-	reset 	=> reset_ctrl_out,
+	reset 	=> reset,
 	rx 		=> uart_rx,
 	tx 		=> uart_tx,
 
@@ -200,8 +201,8 @@ generic map (
 )
 port map (
 	clk => pll_clock_50,
-	reset => reset_ctrl_out,
-	reset_n => reset_ctrl_out_n,
+	reset => reset,
+	reset_n => reset_n,
 	
 	-- PWM Outputs
 	pwm_pulse => pwm_pulse_top,
@@ -238,8 +239,8 @@ port map(
 	transmit_data 		=> uart_transmit_data,
 	transmit_valid 	=> uart_transmit_valid,
 	clk 					=> pll_clock_50,
-	reset 				=> reset_ctrl_out,
-	reset_n				=> reset_ctrl_out_n,
+	reset 				=> reset,
+	reset_n				=> reset_n,
 	ready 				=> seg_ready,
 	hex0 					=> hex0,
 	hex1 					=> hex1,

@@ -21,7 +21,7 @@ port (
 	
 	
 	-- outputs
-	transmit_data  		: out std_logic_vector(7 downto 0):="00000000";
+	transmit_data  		: out std_logic_vector(7 downto 0);
 	transmit_valid			: out std_logic;
 	ready 					: out std_logic;
 	hex0						: out std_logic_vector(6 downto 0);	
@@ -36,18 +36,17 @@ end entity;
 
 
 architecture seg_control of dc_disp_ctrl is
-signal bcd_ones                   : unsigned(3 downto 0); -- ones
-signal bcd_tens                   : unsigned(3 downto 0); -- tens
-signal bcd_hundreds               : unsigned(3 downto 0); -- hundreds
+signal bcd_ones                   : unsigned(3 downto 0):="0000"; -- ones
+signal bcd_tens                   : unsigned(3 downto 0):="0000"; -- tens
+signal bcd_hundreds               : unsigned(3 downto 0):="0000"; -- hundreds
 signal valid_out					: boolean:=false;
 signal transmission_flag		: boolean:=false;
 signal transmission_buffer		: boolean:=false;
 signal transmission_iteration : integer range 0 to 5:=0;
 
-function int_to_ascii(int : integer; iteration : integer)
+function int_to_ascii(int : integer)
 	return std_logic_vector is
 begin
-if(int > 0 or iteration = 2) then
 	case int is 
 			when 0 =>
 				return "00110000"; -- ASCII 0
@@ -72,12 +71,6 @@ if(int > 0 or iteration = 2) then
 			when others =>
 				return "00111111"; -- ASCII ?
 	end case;
-elsif(int = 0) then
-	return "00100000"; -- ASCII SPACE
-else
-	return "00111111"; -- ASCII ?
-end if;
-
 end function int_to_ascii;
 
 
@@ -102,11 +95,19 @@ begin
 		if(transmit_ready = '1' and transmission_flag) then
 			
 			if( transmission_iteration = 0) then
-				transmit_data <= int_to_ascii(to_integer(bcd_hundreds),transmission_iteration);
+				if(bcd_hundreds = "0001") then
+					transmit_data <= int_to_ascii(to_integer(bcd_hundreds));
+				else
+					transmit_data <= "00100000"; -- ASCII SPACE
+				end if;
 			elsif (transmission_iteration = 1) then
-				transmit_data <= int_to_ascii(to_integer(bcd_tens),transmission_iteration);
+				if(bcd_tens /= "0000" or bcd_hundreds = "0001") then
+					transmit_data <= int_to_ascii(to_integer(bcd_tens));
+				else
+					transmit_data <= "00100000"; -- ASCII SPACE
+				end if;
 			elsif transmission_iteration = 2 then
-				transmit_data <= int_to_ascii(to_integer(bcd_ones),transmission_iteration);
+				transmit_data <= int_to_ascii(to_integer(bcd_ones));
 			elsif transmission_iteration = 3 then
 				transmit_data <= "00100101";
 			elsif transmission_iteration = 4 then
@@ -229,8 +230,8 @@ binary_to_BCD : process(duty_cycle_update,reset,reset_n,clk,dc_value)
 		compareFour := "0100";
 		
 		if(reset = '1' or reset_n ='0') then
-		valid_out <= false;
-		ready <= '1';
+			valid_out <= false;
+			ready <= '1';
 		elsif(rising_edge(clk)) then
 			if(duty_cycle_update = '1') then
 				ready <='0';

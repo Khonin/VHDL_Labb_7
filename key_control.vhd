@@ -34,52 +34,40 @@ begin
 		end if;
 	end process;
 	
+	
 	process(clk)
 	begin
 		if(rising_edge(clk)) then
+			key_signal_up <= '0';
+			key_signal_down <= '0';
+			key_signal_on <= '0';
+			key_signal_off <= '0';
 		-- count up to 500000 clock pulses = 10ms after each button press
-			if( time_counter = max_count) then
-				if(key_pressed_2r(0) = '0') then -- Off
+			if(key_pressed_2r(0) = '0') then -- Off
+				key_signal_off <= '1';
+			elsif( time_counter /= max_count) then
+				case key_pressed_2r is
+					when "0111" => -- up
+						time_counter <= time_counter + 1;
+					when "1011" => -- down
+						time_counter <= time_counter + 1;
+					when others =>
+						time_counter <= max_count;
+				end case;
+			elsif( time_counter = max_count) then
+				case key_pressed_2r is
+					when "0111" => -- up
 						time_counter <= 1;
-						key_signal_up <= '0';
-						key_signal_down <= '0';
-						key_signal_on <= '0';
-						key_signal_off <= '1';
-				else
-					case key_pressed_2r is
-						when "0111" => -- up
-							time_counter <= 1;
-							key_signal_off <= '0';
-							key_signal_up <= '1';
-							key_signal_down <= '0';
-							key_signal_on <= '0';
-						when "1011" => -- down
-							time_counter <= 1;
-							key_signal_on <= '0';
-							key_signal_up <= '0';
-							key_signal_down <= '1';
-							key_signal_off <= '0';
-						when "1101" => -- On
-							time_counter <= 1;
-							key_signal_down <= '0';
-							key_signal_up <= '0';
-							key_signal_on <= '1';
-							key_signal_off <= '0';
-						when others =>
-							key_signal_up <= '0';
-							key_signal_down <= '0';
-							key_signal_on <= '0';
-							key_signal_off <= '0';
-					end case;
-				end if;
-			else 
-				key_signal_up <= '0';
-				key_signal_down <= '0';
-				key_signal_on <= '0';
-				key_signal_off <= '0';
-				time_counter <= time_counter + 1;
-			end if;
-			
+						key_signal_up <= '1';
+					when "1011" => -- down
+						time_counter <= 1;
+						key_signal_down <= '1';
+					when "1101" => -- On
+						time_counter <= 1;
+						key_signal_on <= '1';
+					when others =>
+				end case;
+			end if;		
 		end if;
 	end process;
 end architecture;
